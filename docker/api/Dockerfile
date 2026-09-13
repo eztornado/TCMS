@@ -2,10 +2,10 @@
 # expone HTTP en el 80 para que el front (u otro servicio) le haga proxy.
 
 FROM composer:2 AS composer-stage
-FROM php:8.3-fpm-alpine AS base
+FROM php:8.5-fpm-alpine AS base
 
 RUN apk add --no-cache icu-dev libzip-dev zip oniguruma-dev mysql-client supervisor nginx \
-    && docker-php-ext-install pdo_mysql bcmath intl zip opcache
+    && docker-php-ext-install pdo_mysql bcmath intl zip
 
 # GD para las miniaturas de la biblioteca de medios.
 RUN apk add --no-cache libpng-dev libjpeg-turbo-dev libwebp-dev freetype-dev \
@@ -23,11 +23,12 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-in
 FROM base AS production
 ENV APP_ENV=production
 COPY api/ .
+COPY docker/api/entrypoint.sh /usr/local/bin/tcms-entrypoint
 COPY --from=deps /var/www/html/vendor ./vendor
 
 RUN composer dump-autoload --optimize --no-dev --no-interaction \
     && chown -R www-data:www-data storage bootstrap/cache \
-    && chmod +x docker/api/entrypoint.sh
+    && chmod +x /usr/local/bin/tcms-entrypoint
 
 # Config de nginx (docroot public/) y PHP-FPM por socket unix.
 COPY docker/api/nginx.conf /etc/nginx/http.d/default.conf
@@ -47,6 +48,6 @@ RUN { \
   } > /usr/local/etc/php/conf.d/opcache-tcms.ini
 
 EXPOSE 80
-ENTRYPOINT ["docker/api/entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/tcms-entrypoint"]
 # El rol "app" del entrypoint lanza supervisord (nginx + php-fpm).
 CMD ["supervisord", "-c", "/etc/supervisord.conf"]
