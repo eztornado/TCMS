@@ -12,6 +12,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // tax_rates va primero: products.tax_rate_id tiene FK hacia aquí.
+        Schema::create('tax_rates', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->decimal('rate', 6, 3);                // 21.000 = 21 %
+            $table->char('country', 2)->nullable();       // ISO-3166; null = todos
+            $table->boolean('is_default')->default(false);
+            $table->timestamps();
+        });
+
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('slug')->unique();
@@ -50,15 +60,6 @@ return new class extends Migration
             $table->boolean('is_default')->default(false);
             $table->unsignedInteger('sort')->default(0);
             $table->softDeletes();
-            $table->timestamps();
-        });
-
-        Schema::create('tax_rates', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->decimal('rate', 6, 3);                // 21.000 = 21 %
-            $table->char('country', 2)->nullable();       // ISO-3166; null = todos
-            $table->boolean('is_default')->default(false);
             $table->timestamps();
         });
 
