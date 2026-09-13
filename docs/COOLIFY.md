@@ -9,10 +9,16 @@ TCMS es un único `docker-compose.yml` que Coolify orquesta directamente:
 1. En tu proyecto de Coolify: **+ New Resource → Docker Compose**.
 2. Conecta el repositorio (branch `main`) y deja que Coolify lea el
    `docker-compose.yml` de la raíz.
-3. Coolify detecta los servicios; el único puerto publicado es el del
-   `front` (`FRONT_PORT`, por defecto 8080) — así todo sale por el mismo
-   dominio y las cookies de Sanctum funcionan sin CORS.
-4. En **Domains**, mapea tu dominio al puerto del front y activa HTTPS.
+3. Coolify detecta los servicios; nada se publica al host — el proxy de
+   Coolify (Traefik) enruta al `front` (puerto interno 80) por la red
+   interna. Así todo sale por el mismo dominio y las cookies de Sanctum
+   funcionan sin CORS. No añadas `ports:` al compose: choca con Traefik
+   (`Bind for 0.0.0.0:XXXX failed: port is already allocated`) y el
+   contenedor se queda en `Created`.
+4. En el servicio `front`, pon en **Domains** tu URL completa, p. ej.
+   `https://panel.midominio.com` (host, protocolo y sin path — si el campo
+   queda vacío o mal formado, Traefik genera reglas tipo `Host(``)` y no
+   enruta). Activa HTTPS.
 
 ## 2. Variables de entorno (Settings → Environment)
 

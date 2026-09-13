@@ -7,8 +7,9 @@
 #   STRIPE_SECRET / STRIPE_WEBHOOK_SECRET (opcional),
 #   ADMIN_EMAIL / ADMIN_PASSWORD (solo el primer despliegue).
 #
-# El único puerto publicado es el del front (nginx del panel, que hace de
-# proxy a /api). Para exponer el API directamente, publica API_PORT.
+# Nada se publica al host: el proxy de Coolify (Traefik) enruta el dominio
+# al front (nginx del panel, que hace de proxy a /api) por la red interna.
+# En desarrollo local usa un docker-compose.override.yml si quieres puerto.
 
 name: tcms
 
@@ -99,8 +100,8 @@ services:
     depends_on:
       api:
         condition: service_healthy
-    ports:
-      - '${FRONT_PORT:-8080}:80'
+    # Sin ports: en Coolify el proxy enruta a front:80 por la red interna
+    # (publicar al host choca con Traefik: "port is already allocated").
 
   mysql:
     image: mysql:8.4
