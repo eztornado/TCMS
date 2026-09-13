@@ -1,0 +1,29 @@
+# Node
+node_modules/
+front/dist/
+front/vendor/
+
+# Claude/agentes IA
+.claude/
+
+# Laravel
+api/vendor/
+api/node_modules/
+api/public/build/
+api/storage/*.key
+api/storage/app/public/*
+!api/storage/app/public/.gitkeep
+api/.env
+api/.env.backup
+api/.phpunit.result.cache
+
+# Docker runtime
+docker/data/
+.env
+
+# OS/Editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+*.Zone.Identifier
