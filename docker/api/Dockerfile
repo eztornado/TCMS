@@ -12,6 +12,12 @@ RUN apk add --no-cache libpng-dev libjpeg-turbo-dev libwebp-dev freetype-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install gd
 
+# phpredis: el cliente Redis que Laravel usa por defecto (cache, sesiones, cola).
+RUN apk add --no-cache --virtual .phpize-deps $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .phpize-deps
+
 COPY --from=composer-stage /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
