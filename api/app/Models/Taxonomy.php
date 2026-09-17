@@ -35,10 +35,15 @@ class Taxonomy extends Model
     /** Taxonomías aplicables a un modelo: globales + propias. */
     public static function applicableTo(CustomModel $model): Collection
     {
-        return Cache::remember("cm.{$model->slug}.taxonomies", 600, fn () => static::query()
+        // Se cachea como array plano: Laravel 13 deserializa la caché de la
+        // base de datos sin permitir objetos (__PHP_Incomplete_Class).
+        $taxonomies = Cache::remember("cm.{$model->slug}.taxonomies", 600, fn () => static::query()
             ->where(fn ($q) => $q->whereNull('custom_model_id')->orWhere('custom_model_id', $model->id))
             ->with('terms')
-            ->get());
+            ->get()
+            ->toArray());
+
+        return static::hydrate($taxonomies);
     }
 
     protected static function booted(): void

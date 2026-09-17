@@ -17,12 +17,13 @@ class Setting extends Model
         ];
     }
 
-    /** Valor cacheado por clave (invalidado al guardar). */
+    /** Valor cacheado por clave (invalidado al guardar). Cachea array plano:
+     * los objetos serializados en caché fichero rompen entre procesos. */
     public static function value(string $key, mixed $default = null): mixed
     {
-        $settings = Cache::remember('tcms.settings', 3600, fn () => static::query()->pluck('value', 'key'));
+        $settings = Cache::remember('tcms.settings', 3600, fn () => static::query()->pluck('value', 'key')->all());
 
-        return $settings->get($key, $default);
+        return $settings[$key] ?? $default;
     }
 
     protected static function booted(): void
