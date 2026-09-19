@@ -57,7 +57,15 @@ class CustomModel extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn (self $model) => Cache::forget("cm.$model->slug"));
-        static::deleted(fn (self $model) => Cache::forget("cm.$model->slug"));
+        // Cuerpos con bloque (nunca flecha): Cache::forget devuelve false
+        // cuando la clave no existía y un listener que devuelve false CORTA
+        // la cadena de listeners del evento (el observer de sync dejaba de
+        // registrar los borrados).
+        static::saved(function (self $model): void {
+            Cache::forget("cm.$model->slug");
+        });
+        static::deleted(function (self $model): void {
+            Cache::forget("cm.$model->slug");
+        });
     }
 }

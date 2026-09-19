@@ -20,7 +20,7 @@ class SchemaService
 {
     /** Columnas base de toda tabla de Custom Model. */
     private const RESERVED = [
-        'id', 'user_id', 'status', 'published_at', 'slug', 'created_at',
+        'id', 'uuid', 'user_id', 'status', 'published_at', 'slug', 'created_at',
         'updated_at', 'deleted_at', 'terms', 'media',
     ];
 
@@ -38,6 +38,7 @@ class SchemaService
 
         Schema::create($model->table_name, function ($table): void {
             $table->id();
+            $table->uuid('uuid')->nullable()->unique();              // identidad de sync
             $table->foreignId('user_id')->nullable()->index();       // autor
             $table->string('status')->default('draft')->index();     // editorial
             $table->timestamp('published_at')->nullable();
@@ -76,6 +77,28 @@ class SchemaService
         });
 
         return $field->name;
+    }
+
+    /**
+     * Tipo de campo → definición de columna física. Todo nullable: el
+     * validador decide la obligatoriedad, el esquema no bloquea datos
+     * históricos al cambiar de opinión.
+     */
+    private function definitionToColumn($table, string $name, string|CustomFieldType $type)
+    {
+        $type = $type instanceof CustomFieldType ? $type : CustomFieldType::from($type);
+
+        return match ($type) {
+            CustomFieldType::Number => $table->unsignedBigInteger($name)->nullable(),
+            CustomFieldType::Decimal => $table->decimal($name, 12, 2)->nullable(),
+            CustomFieldType::Boolean => $table->boolean($name)->nullable(),
+            CustomFieldType::Date => $table->date($name)->nullable(),
+            CustomFieldType::DateTime => $table->dateTime($name)->nullable(),
+            CustomFieldType::Textarea, CustomFieldType::RichText => $table->text($name)->nullable(),
+            CustomFieldType::MultiSelect, CustomFieldType::Json => $table->json($name)->nullable(),
+            // Text, Slug, Color, Select, Relation y Media: cadenas.
+            default => $table->string($name)->nullable(),
+        };
     }
 
     public function dropColumn(CustomModel $model, string $name): void

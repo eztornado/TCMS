@@ -48,7 +48,13 @@ class Taxonomy extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn (self $t) => Cache::flush());
-        static::deleted(fn (self $t) => Cache::flush());
+        // Cuerpos con bloque: los listeners no deben devolver false (corta la
+        // cadena de listeners del evento; ver SyncObserver).
+        static::saved(function (self $t): void {
+            Cache::flush();
+        });
+        static::deleted(function (self $t): void {
+            Cache::flush();
+        });
     }
 }

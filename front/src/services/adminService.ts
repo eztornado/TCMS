@@ -69,7 +69,9 @@ export const settingsService = {
     return api.get<{ data: Setting[] }>('/admin/settings').then((r) => unwrap(r))
   },
   async save(values: Record<string, unknown>): Promise<void> {
-    await api.put('/admin/settings', { settings: values })
+    // El API espera una lista de {key, value}, no un mapa clave→valor.
+    const entries = Object.entries(values).map(([key, value]) => ({ key, value }))
+    await api.put('/admin/settings', { settings: entries })
   },
 }
 

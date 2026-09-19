@@ -10,11 +10,14 @@ front/vendor/
 api/vendor/
 api/node_modules/
 api/public/build/
+api/public/ui/
+api/nativephp/
 api/storage/*.key
 api/storage/app/public/*
 !api/storage/app/public/.gitkeep
 api/.env
 api/.env.backup
+api/.env.native.build
 api/.phpunit.result.cache
 
 # Docker runtime

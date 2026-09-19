@@ -28,7 +28,13 @@ class Setting extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn () => Cache::forget('tcms.settings'));
-        static::deleted(fn () => Cache::forget('tcms.settings'));
+        // Cuerpos con bloque: los listeners no deben devolver false (corta la
+        // cadena de listeners del evento; ver SyncObserver).
+        static::saved(function (): void {
+            Cache::forget('tcms.settings');
+        });
+        static::deleted(function (): void {
+            Cache::forget('tcms.settings');
+        });
     }
 }

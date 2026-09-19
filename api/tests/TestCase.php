@@ -7,6 +7,7 @@ use Database\Seeders\MenuSeeder;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\SettingSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Auth;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -31,5 +32,17 @@ abstract class TestCase extends BaseTestCase
         $this->seed(PermissionSeeder::class);
         $this->seed(MenuSeeder::class);
         $this->seed(SettingSeeder::class);
+    }
+
+    /**
+     * Reinicia el contenedor de auth: los guards (p. ej. sanctum, un
+     * RequestGuard) memoizan al usuario resuelto mientras la app del test
+     * vive, lo que falsearía peticiones con credenciales ya revocadas.
+     */
+    protected function refreshAuth(): void
+    {
+        Auth::clearResolvedInstances();
+        $this->app->forgetInstance('auth');
+        $this->app->forgetInstance('auth.factory');
     }
 }

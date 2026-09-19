@@ -43,6 +43,8 @@ x-api-common: &api-common
     REDIS_HOST: redis
     REDIS_PORT: "6379"
     FILESYSTEM_DISK: public
+    # Contexto de ejecución del core (App\Support\Runtime): servidor central.
+    TCMS_RUNTIME: web
     MAIL_MAILER: ${MAIL_MAILER:-log}
     STRIPE_SECRET: ${STRIPE_SECRET:-}
     STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}

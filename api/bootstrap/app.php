@@ -9,6 +9,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Laravel\Sanctum\Http\Middleware\CheckAbilities;
+use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,10 +24,17 @@ return Application::configure(basePath: dirname(__DIR__))
         // dominio en producción) comparten la sesión por cookies.
         $middleware->statefulApi();
 
+        // No hay login server-side (lo hace el SPA): sin redirección para
+        // invitados, Authenticate lanza y el render devuelve 401 JSON.
+        $middleware->redirectGuestsTo(fn () => null);
+
         $middleware->alias([
             'permission' => EnsureUserHasPermission::class,
             'role' => EnsureUserHasRole::class,
             'resolve_custom_model' => ResolveCustomModel::class,
+            // Tokens de device (sync): abilities de Sanctum.
+            'ability' => CheckAbilities::class,
+            'abilities' => CheckForAnyAbility::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -42,10 +51,10 @@ return Application::configure(basePath: dirname(__DIR__))
             ], $e->status);
         });
 
-        // 401 sin la verbosidad por defecto de Laravel en rutas API.
+        // 401 JSON siempre (el panel es un SPA: nadie navega rutas protegidas
+        // sin el front; evita el 500 de "Route [login] not defined" en GETs
+        // sin Accept: json, típicos de los devices).
         $exceptions->render(function (AuthenticationException $e, Request $request) {
-            if ($request->is('api/*')) {
-                return response()->json(['message' => 'No autenticado.'], 401);
-            }
+            return response()->json(['message' => 'No autenticado.'], 401);
         });
     })->create();

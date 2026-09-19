@@ -38,9 +38,11 @@ return [
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => null,
-            'journal_mode' => null,
-            'synchronous' => null,
+            // En nativo (webview concurrente sobre sqlite): WAL + busy_timeout
+            // evitan "database is locked". En web/tests quedan a null (igual que hoy).
+            'busy_timeout' => env('DB_SQLITE_BUSY_TIMEOUT'),
+            'journal_mode' => env('DB_SQLITE_JOURNAL_MODE'),
+            'synchronous' => env('DB_SQLITE_SYNCHRONOUS'),
             'transaction_mode' => 'DEFERRED',
         ],
 

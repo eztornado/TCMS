@@ -2,6 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 
+// BUILD_TARGET=native: el panel se emite a api/public/ui para que lo sirva el
+// propio Laravel (apps NativePHP). Por defecto: dist/ (SPA estática de Docker).
+const nativeBuild = process.env.BUILD_TARGET === 'native'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -24,6 +28,8 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: nativeBuild ? '../api/public/ui' : 'dist',
+    emptyOutDir: true,
     rollupOptions: {
       output: {
         // Chunks por vendor (función: formato soportado por Rolldown en Vite 8).

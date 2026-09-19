@@ -29,6 +29,7 @@ import { usePermissions } from '@/hooks/usePermissions'
 import { config } from '@/config'
 import type { MenuItem } from '@/types/api'
 import ChangePasswordModal from '@/components/layout/ChangePasswordModal'
+import SyncIndicator from '@/features/sync/SyncIndicator'
 
 function NavItem({ item, onNavigate }: { item: MenuItem; onNavigate: () => void }) {
   if (item.children?.length) {
@@ -109,6 +110,7 @@ export default function AppLayout() {
           </Group>
 
           <Group gap="xs" wrap="nowrap">
+            <SyncIndicator />
             <MantineNavLink
               variant="subtle"
               label={colorScheme === 'dark' ? 'Claro' : 'Oscuro'}

@@ -17,7 +17,7 @@ class Media extends Model
     protected $table = 'media';
 
     protected $fillable = [
-        'uuid', 'user_id', 'name', 'file_name', 'disk', 'path',
+        'uuid', 'user_id', 'name', 'file_name', 'disk', 'path', 'hash',
         'thumbnail_path', 'mime_type', 'size', 'width', 'height', 'alt', 'title',
     ];
 

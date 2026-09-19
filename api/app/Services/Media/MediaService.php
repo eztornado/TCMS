@@ -34,21 +34,35 @@ class MediaService
             'file_name' => $file->getClientOriginalName(),
             'disk' => $disk,
             'path' => $path,
+            'hash' => hash_file('sha256', $file->getRealPath()),
             'mime_type' => $file->getMimeType(),
             'size' => (int) $file->getSize(),
             'width' => $width,
             'height' => $height,
         ]);
 
-        if ($media->isImage() && $media->mime_type !== 'image/svg+xml') {
-            try {
-                $media->update(['thumbnail_path' => $this->thumbnail($media)]);
-            } catch (\Throwable $e) {
-                logger()->warning('No se pudo generar la miniatura', ['media' => $media->id, 'e' => $e->getMessage()]);
-            }
-        }
+        // El runtime embebido de móvil puede venir sin GD: se sube el original
+        // sin miniatura en lugar de fallar.
+        $this->ensureThumbnail($media);
 
         return $media;
+    }
+
+    /**
+     * Genera la miniatura si procede (y hay GD). Silencioso si no: el
+     * original siempre queda subido.
+     */
+    public function ensureThumbnail(Media $media): void
+    {
+        if (! $media->isImage() || $media->mime_type === 'image/svg+xml' || ! extension_loaded('gd')) {
+            return;
+        }
+
+        try {
+            $media->forceFill(['thumbnail_path' => $this->thumbnail($media)])->save();
+        } catch (\Throwable $e) {
+            logger()->warning('No se pudo generar la miniatura', ['media' => $media->id, 'e' => $e->getMessage()]);
+        }
     }
 
     /** Miniatura WebP de 480 px de ancho máximo, preservando transparencia. */

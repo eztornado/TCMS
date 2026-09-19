@@ -40,8 +40,10 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'root' => env('TCMS_PUBLIC_DISK_ROOT', storage_path('app/public')),
+            // En nativo la URL es relativa (el propio Laravel sirve /storage
+            // en el mismo origen); por defecto, absoluta como hasta ahora.
+            'url' => env('FILESYSTEM_PUBLIC_URL', rtrim(env('APP_URL', 'http://localhost'), '/').'/storage'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

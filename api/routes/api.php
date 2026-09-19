@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin;
 use App\Http\Controllers\Auth;
 use App\Http\Controllers\Cm\CustomModelEntryController;
 use App\Http\Controllers\Store;
+use App\Http\Controllers\Sync;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,12 +20,22 @@ Route::prefix('auth')->group(function (): void {
     Route::post('login', Auth\LoginController::class)->middleware('throttle:10,1');
     Route::post('forgot-password', Auth\ForgotPasswordController::class)->middleware('throttle:10,1');
     Route::post('reset-password', Auth\ResetPasswordController::class)->middleware('throttle:10,1');
+    // Alta de device con credenciales, sin cookies (bootstrap de apps nativas).
+    Route::post('device/login', [Auth\DeviceTokenController::class, 'login'])->middleware('throttle:10,1');
 
     Route::middleware('auth')->group(function (): void {
         Route::get('me', [Auth\MeController::class, 'show']);
         Route::get('menu', [Auth\MeController::class, 'menu']);
         Route::post('logout', Auth\LogoutController::class);
         Route::post('change-password', [Auth\MeController::class, 'changePassword']);
+        Route::post('device', [Auth\DeviceTokenController::class, 'store']);
+    });
+
+    // Gestión de devices: con sesión (panel) o bearer token (app nativa);
+    // el guard sanctum cubre ambos caminos.
+    Route::middleware('auth:sanctum')->group(function (): void {
+        Route::get('devices', [Auth\DeviceTokenController::class, 'index']);
+        Route::delete('devices/{device}', [Auth\DeviceTokenController::class, 'destroy']);
     });
 });
 
@@ -134,6 +145,30 @@ Route::prefix('store')->group(function (): void {
     Route::get('orders/{number}', [Store\OrderController::class, 'show']);
 
     Route::post('bookings', [Store\BookingController::class, 'store']);
+});
+
+/*
+ * Sincronización (apps nativas): manifiesto y pull de deltas. Requiere
+ * token de device con ability `sync` (o sesión de panel para uso manual).
+ */
+Route::prefix('sync')->middleware(['auth:sanctum', 'abilities:sync'])->group(function (): void {
+    Route::get('manifest', [Sync\SyncController::class, 'manifest']);
+    Route::post('pull', [Sync\SyncController::class, 'pull'])->middleware('throttle:sync');
+    Route::post('push', [Sync\SyncController::class, 'push'])->middleware('throttle:sync');
+
+    // Canal de ficheros de media (central ↔ device).
+    Route::post('media/check', [Sync\SyncMediaController::class, 'check']);
+    Route::post('media/{uuid}', [Sync\SyncMediaController::class, 'upload']);
+    Route::get('media/{uuid}/download', [Sync\SyncMediaController::class, 'download']);
+});
+
+/*
+ * Sync local del device para la UI del panel (sesión de cookies, BD sqlite
+ * embebida). En el central estas rutas responden "no aplica".
+ */
+Route::prefix('sync')->middleware('auth')->group(function (): void {
+    Route::get('state', [Sync\SyncStateController::class, 'state']);
+    Route::post('run', [Sync\SyncStateController::class, 'run']);
 });
 
 Route::post('webhooks/{provider}', WebhookController::class);
